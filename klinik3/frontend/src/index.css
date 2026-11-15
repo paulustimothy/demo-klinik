@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-brand-primary: #0d7480;
+    --color-clinic-bg: #f7f9fa;
+    --color-clinic-ink: #1f3038;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-color: #f7f9fa;
+    color: #1f3038;
+    font-family:
+      "Plus Jakarta Sans",
+      system-ui,
+      -apple-system,
+      sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Accessible visible focus ring */
+  *:focus-visible {
+    outline: 2px solid #0d7480;
+    outline-offset: 2px;
+  }
+
+  /* Motion safety */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
