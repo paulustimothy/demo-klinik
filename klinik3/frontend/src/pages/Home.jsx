@@ -14,6 +14,8 @@ import {
   FileText,
   CheckCircle2,
   ArrowRight,
+  Star,
+  ShieldCheck,
 } from "lucide-react";
 
 export function Home() {
@@ -51,26 +53,39 @@ export function Home() {
               Reservasi online cepat dan mudah, langsung terhubung ke WhatsApp klinik tanpa antre.
             </p>
 
-            {/* 2 CTA Utama */}
+            {/* CTA Tunggal: Fokus & Tegas */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Button
                 to="/booking"
                 variant="primary"
                 size="lg"
                 icon={Calendar}
-                className="sm:w-auto shadow-md"
+                className="sm:w-auto shadow-lg text-base font-semibold px-7 py-3.5 bg-brand-500 hover:bg-brand-600 border border-brand-400/40"
               >
-                Buat Janji
+                Pilih Jadwal Temu
               </Button>
-              <Button
-                href={whatsappUrl}
-                variant="whatsapp"
-                size="lg"
-                icon={MessageCircle}
-                className="sm:w-auto shadow-md"
-              >
-                Chat WhatsApp
-              </Button>
+            </div>
+
+            {/* Mini Trust Bar ala Klinik Indonesia */}
+            <div className="pt-5 border-t border-white/20 flex flex-wrap items-center gap-y-2.5 gap-x-4 sm:gap-x-6 text-xs sm:text-sm text-white/90">
+              <div className="flex items-center gap-1.5 font-medium">
+                <div className="flex items-center text-amber-300">
+                  <Star className="w-4 h-4 fill-amber-400 stroke-amber-400" />
+                </div>
+                <span>
+                  <strong className="font-semibold text-white">4.9/5</strong> (1.200+ Pasien)
+                </span>
+              </div>
+              <span className="text-white/30 hidden sm:inline" aria-hidden="true">•</span>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Dokter Gigi Berpengalaman</span>
+              </div>
+              <span className="text-white/30 hidden sm:inline" aria-hidden="true">•</span>
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Konfirmasi via WhatsApp</span>
+              </div>
             </div>
           </div>
         </div>

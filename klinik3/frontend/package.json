@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run sync:backend",
+    "sync:backend": "rm -rf ../backend/public/assets/* && cp -r dist/assets/* ../backend/public/assets/ && cp dist/index.html ../backend/public/index.html && cp -r dist/images/* ../backend/public/images/ 2>/dev/null || true",
     "preview": "vite preview"
   },
   "dependencies": {

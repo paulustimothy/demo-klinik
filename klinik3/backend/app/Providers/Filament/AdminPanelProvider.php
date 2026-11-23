@@ -36,6 +36,10 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::PAGE_START,
                 fn () => view('filament.demo-notice'),
             )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.auth.login-credentials'),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
