@@ -59,6 +59,95 @@ class FilamentAdminTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/manage-clinic-settings')
             ->assertSuccessful();
+
+        $this->actingAs($admin)
+            ->get('/admin/booking-report')
+            ->assertSuccessful()
+            ->assertSee('Laporan Bulanan Reservasi')
+            ->assertSee('Angka No-Show')
+            ->assertSee('Periode Laporan');
+    }
+
+    public function test_admin_can_mark_booking_as_no_show(): void
+    {
+        $booking = \App\Models\Booking::first();
+        $this->assertNotNull($booking);
+
+        $booking->status = \App\Enums\BookingStatus::VERIFIED;
+        $booking->save();
+
+        $this->assertTrue($booking->markNoShow());
+        $this->assertEquals(\App\Enums\BookingStatus::NO_SHOW, $booking->status);
+        $this->assertNull($booking->slot_key);
+    }
+
+    public function test_export_service_generates_csv_and_xlsx(): void
+    {
+        $exportService = app(\App\Services\ExportService::class);
+        $bookings = \App\Models\Booking::with(['service', 'doctor'])->get();
+
+        // 1. Export Bookings CSV
+        $csvResponse = $exportService->exportBookings($bookings, 'csv');
+        $this->assertEquals(200, $csvResponse->getStatusCode());
+        $this->assertStringContainsString('.csv', $csvResponse->getFile()->getFilename());
+
+        // 2. Export Bookings XLSX
+        $xlsxResponse = $exportService->exportBookings($bookings, 'xlsx');
+        $this->assertEquals(200, $xlsxResponse->getStatusCode());
+        $this->assertStringContainsString('.xlsx', $xlsxResponse->getFile()->getFilename());
+    }
+
+    public function test_admin_can_export_monthly_report(): void
+    {
+        $exportService = app(\App\Services\ExportService::class);
+        $page = new \App\Filament\Pages\BookingReport();
+        $page->selectedMonth = 11;
+        $page->selectedYear = 2026;
+        $data = $page->getReportData();
+
+        $xlsxResponse = $exportService->exportMonthlyReport(
+            $data['summary'],
+            $data['serviceStats'],
+            $data['doctorStats'],
+            $data['noShowList'],
+            $data['monthName'],
+            $data['year'],
+            'xlsx'
+        );
+        $this->assertEquals(200, $xlsxResponse->getStatusCode());
+
+        $csvResponse = $exportService->exportMonthlyReport(
+            $data['summary'],
+            $data['serviceStats'],
+            $data['doctorStats'],
+            $data['noShowList'],
+            $data['monthName'],
+            $data['year'],
+            'csv'
+        );
+        $this->assertEquals(200, $csvResponse->getStatusCode());
+
+        $pdfResponse = $exportService->exportMonthlyPdf(
+            $data['summary'],
+            $data['serviceStats'],
+            $data['doctorStats'],
+            $data['noShowList'],
+            $data['monthName'],
+            $data['year']
+        );
+        $this->assertEquals(200, $pdfResponse->getStatusCode());
+        $this->assertEquals('application/pdf', $pdfResponse->headers->get('content-type'));
+    }
+
+    public function test_database_backup_command(): void
+    {
+        $this->artisan('db:backup')
+            ->expectsOutputToContain('Backup berhasil dibuat!')
+            ->assertSuccessful();
+
+        $backupService = app(\App\Services\DatabaseBackupService::class);
+        $backups = $backupService->listBackups();
+        $this->assertNotEmpty($backups);
     }
 
     public function test_chat_url_changes_when_booking_is_cancelled(): void

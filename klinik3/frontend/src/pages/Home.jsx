@@ -111,26 +111,32 @@ export function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {services.slice(0, 3).map((service) => (
-            <Link
-              key={service.id}
-              to="/layanan"
-              className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-card"
-            >
-              <ImageCard
-                src={service.image}
-                alt={service.alt}
-                aspectRatio="4/3"
-                width={service.width}
-                height={service.height}
-                overlay={true}
-                badge={service.priceFormatted}
-                title={service.name}
-              />
-            </Link>
-          ))}
-        </div>
+        {services.length === 0 ? (
+          <div className="rounded-xl border border-clinic-border bg-white p-6 text-center text-sm text-clinic-muted shadow-soft">
+            Daftar layanan sedang diperbarui. Silakan hubungi kami melalui WhatsApp untuk informasi perawatan gigi.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {services.slice(0, 3).map((service) => (
+              <Link
+                key={service.id}
+                to="/layanan"
+                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-card"
+              >
+                <ImageCard
+                  src={service.image}
+                  alt={service.alt}
+                  aspectRatio="4/3"
+                  width={service.width}
+                  height={service.height}
+                  overlay={true}
+                  badge={service.priceFormatted}
+                  title={service.name}
+                />
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 3. CLINIC GALLERY (Photo mosaic / scroller 5-6 images, captions max 3 words) */}
@@ -191,33 +197,39 @@ export function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {doctors.slice(0, 3).map((doctor) => (
-            <Link
-              key={doctor.id}
-              to="/dokter"
-              className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-card"
-            >
-              <ImageCard
-                src={doctor.image}
-                alt={doctor.alt}
-                aspectRatio="3/4"
-                width={doctor.width}
-                height={doctor.height}
+        {doctors.length === 0 ? (
+          <div className="rounded-xl border border-clinic-border bg-white p-6 text-center text-sm text-clinic-muted shadow-soft">
+            Jadwal praktek dokter sedang diperbarui oleh klinik. Silakan hubungi kami untuk janji temu offline.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {doctors.slice(0, 3).map((doctor) => (
+              <Link
+                key={doctor.id}
+                to="/dokter"
+                className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-card"
               >
-                {/* Hanya Nama dan Gelar saja sesuai PRD */}
-                <div className="space-y-0.5">
-                  <h3 className="text-base sm:text-lg font-semibold text-clinic-ink group-hover:text-brand-600 transition-colors">
-                    {doctor.name}
-                  </h3>
-                  <p className="text-xs text-clinic-muted font-medium">
-                    {doctor.title}
-                  </p>
-                </div>
-              </ImageCard>
-            </Link>
-          ))}
-        </div>
+                <ImageCard
+                  src={doctor.image}
+                  alt={doctor.alt}
+                  aspectRatio="3/4"
+                  width={doctor.width}
+                  height={doctor.height}
+                >
+                  {/* Hanya Nama dan Gelar saja sesuai PRD */}
+                  <div className="space-y-0.5">
+                    <h3 className="text-base sm:text-lg font-semibold text-clinic-ink group-hover:text-brand-600 transition-colors">
+                      {doctor.name}
+                    </h3>
+                    <p className="text-xs text-clinic-muted font-medium">
+                      {doctor.title}
+                    </p>
+                  </div>
+                </ImageCard>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 5. CARA BOOKING (3 steps: icon + 3 kata) */}

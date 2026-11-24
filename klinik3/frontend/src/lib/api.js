@@ -69,7 +69,7 @@ export const api = {
         const res = await fetch(`${API_URL}/services`);
         if (res.ok) {
           const rawServices = await res.json();
-          if (Array.isArray(rawServices) && rawServices.length > 0) {
+          if (Array.isArray(rawServices)) {
             return rawServices.map((s, idx) => ({
               id: s.id,
               slug: s.slug || `service-${s.id}`,
@@ -104,7 +104,7 @@ export const api = {
         const res = await fetch(`${API_URL}/doctors`);
         if (res.ok) {
           const rawDoctors = await res.json();
-          if (Array.isArray(rawDoctors) && rawDoctors.length > 0) {
+          if (Array.isArray(rawDoctors)) {
             return rawDoctors.map((d, idx) => {
               const practiceDays = d.practice_days || (d.schedules ? d.schedules.map(sc => sc.weekday) : [1, 3, 5]);
               return {
@@ -144,8 +144,11 @@ export const api = {
         if (res.ok) {
           return await res.json();
         }
+        // Jika status bukan OK (misal dokter tidak aktif/404 atau klinik libur), kembalikan slot kosong
+        return [];
       } catch (err) {
-        console.warn('Gagal memuat ketersediaan jam dari API, beralih ke deterministik mock:', err);
+        console.warn('Gagal memuat ketersediaan jam dari API:', err);
+        return [];
       }
     }
 
@@ -194,7 +197,14 @@ export const api = {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        const error = new Error(data.message || 'Terjadi kesalahan sistem.');
+        let msg = data.message || 'Terjadi kesalahan sistem.';
+        if (data.errors && typeof data.errors === 'object') {
+          const detailMsgs = Object.values(data.errors).flat().filter(Boolean);
+          if (detailMsgs.length > 0) {
+            msg = detailMsgs.join(' ');
+          }
+        }
+        const error = new Error(msg);
         error.status = res.status;
         error.data = data;
         throw error;

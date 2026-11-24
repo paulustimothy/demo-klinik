@@ -2,12 +2,14 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { api } from '../lib/api';
 import { clinicData } from '../data/clinic';
 
+const API_URL = import.meta.env.VITE_API_URL || null;
+
 const ClinicContext = createContext(null);
 
 export function ClinicProvider({ children }) {
   const [clinic, setClinic] = useState(clinicData);
-  const [services, setServices] = useState(clinicData.services);
-  const [doctors, setDoctors] = useState(clinicData.doctors);
+  const [services, setServices] = useState(API_URL ? [] : clinicData.services);
+  const [doctors, setDoctors] = useState(API_URL ? [] : clinicData.doctors);
   const [loading, setLoading] = useState(true);
 
   const fetchClinicData = useCallback(async () => {
@@ -21,10 +23,10 @@ export function ClinicProvider({ children }) {
       if (clinicRes) {
         setClinic(clinicRes);
       }
-      if (servicesRes && Array.isArray(servicesRes) && servicesRes.length > 0) {
+      if (servicesRes && Array.isArray(servicesRes)) {
         setServices(servicesRes);
       }
-      if (doctorsRes && Array.isArray(doctorsRes) && doctorsRes.length > 0) {
+      if (doctorsRes && Array.isArray(doctorsRes)) {
         setDoctors(doctorsRes);
       }
     } catch (err) {

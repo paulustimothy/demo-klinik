@@ -9,6 +9,7 @@ enum BookingStatus: string
     case EXPIRED = 'expired';
     case CANCELLED = 'cancelled';
     case COMPLETED = 'completed';
+    case NO_SHOW = 'no_show';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum BookingStatus: string
             self::EXPIRED => 'Kedaluwarsa',
             self::CANCELLED => 'Dibatalkan',
             self::COMPLETED => 'Selesai',
+            self::NO_SHOW => 'Tidak Hadir (No-Show)',
         };
     }
 
@@ -29,6 +31,7 @@ enum BookingStatus: string
             self::EXPIRED => 'gray',
             self::CANCELLED => 'danger',
             self::COMPLETED => 'info',
+            self::NO_SHOW => 'danger',
         };
     }
 

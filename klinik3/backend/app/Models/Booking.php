@@ -130,6 +130,20 @@ class Booking extends Model
     }
 
     /**
+     * Tandai pasien tidak hadir (no-show) dan lepaskan slot
+     */
+    public function markNoShow(): bool
+    {
+        if ($this->status !== BookingStatus::VERIFIED) {
+            return false;
+        }
+
+        $this->status = BookingStatus::NO_SHOW;
+        $this->slot_key = null;
+        return $this->save();
+    }
+
+    /**
      * Kedaluwarsa booking dan lepaskan slot
      */
     public function expire(): bool

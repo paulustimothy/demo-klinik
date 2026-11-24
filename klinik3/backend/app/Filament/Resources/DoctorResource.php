@@ -25,7 +25,7 @@ class DoctorResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Daftar Dokter';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     public static function canDelete(Model $record): bool
     {

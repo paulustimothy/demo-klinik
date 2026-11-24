@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Filament\Resources\BookingResource\Pages;
 use App\Models\Booking;
 use App\Models\ClinicSetting;
+use App\Services\ExportService;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -131,6 +132,7 @@ class BookingResource extends Resource
                         BookingStatus::COMPLETED->value => 'Selesai',
                         BookingStatus::CANCELLED->value => 'Dibatalkan',
                         BookingStatus::EXPIRED->value => 'Kedaluwarsa',
+                        BookingStatus::NO_SHOW->value => 'Tidak Hadir (No-Show)',
                     ]),
                 SelectFilter::make('doctor_id')
                     ->label('Dokter')
@@ -186,6 +188,8 @@ class BookingResource extends Resource
                             $message = "Halo {$record->patient_name}, booking telah dibatalkan. Jadwal Anda di {$clinicName} pada {$tanggal} jam {$jam} telah dibatalkan. Kode: {$record->code}.";
                         } elseif ($record->status === BookingStatus::EXPIRED) {
                             $message = "Halo {$record->patient_name}, booking telah kedaluwarsa. Jadwal Anda di {$clinicName} pada {$tanggal} jam {$jam} telah kedaluwarsa. Kode: {$record->code}.";
+                        } elseif ($record->status === BookingStatus::NO_SHOW) {
+                            $message = "Halo {$record->patient_name}, kami mencatat Anda belum sempat hadir pada jadwal di {$clinicName} pada {$tanggal} jam {$jam}. Ingin mengatur ulang jadwal reservasi Anda? Kode: {$record->code}.";
                         } else {
                             $message = "Halo {$record->patient_name}, jadwal Anda di {$clinicName} pada {$tanggal} jam {$jam} sudah dikonfirmasi. Kode: {$record->code}.";
                         }
@@ -233,6 +237,66 @@ class BookingResource extends Resource
                             ->title('Reservasi ditandai selesai')
                             ->success()
                             ->send();
+                    }),
+
+                // 5. Tidak Hadir / No-Show (verified only)
+                Action::make('no_show')
+                    ->label('No-Show')
+                    ->icon('heroicon-m-user-minus')
+                    ->color('danger')
+                    ->visible(fn (Booking $record): bool => $record->status === BookingStatus::VERIFIED)
+                    ->requiresConfirmation()
+                    ->modalHeading('Tandai Pasien Tidak Hadir (No-Show)')
+                    ->modalDescription('Apakah pasien ini tidak hadir pada jadwal yang telah dikonfirmasi? Status akan diubah menjadi No-Show dan slot jadwal akan dibebaskan.')
+                    ->modalSubmitActionLabel('Ya, Tandai No-Show')
+                    ->action(function (Booking $record): void {
+                        $record->markNoShow();
+                        Notification::make()
+                            ->title('Reservasi ditandai Tidak Hadir (No-Show)')
+                            ->warning()
+                            ->send();
+                    }),
+            ])
+            ->headerActions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('exportExcel')
+                        ->label('Export ke Excel (.xlsx)')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->color('success')
+                        ->action(function ($livewire) {
+                            $records = $livewire->getFilteredTableQuery()->with(['service', 'doctor'])->get();
+                            return app(ExportService::class)->exportBookings($records, 'xlsx');
+                        }),
+                    Tables\Actions\Action::make('exportCsv')
+                        ->label('Export ke CSV (.csv)')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('gray')
+                        ->action(function ($livewire) {
+                            $records = $livewire->getFilteredTableQuery()->with(['service', 'doctor'])->get();
+                            return app(ExportService::class)->exportBookings($records, 'csv');
+                        }),
+                ])
+                ->label('Export Data')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->button(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkAction::make('exportBulkExcel')
+                    ->label('Export Terpilih (Excel)')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                        $records->loadMissing(['service', 'doctor']);
+                        return app(ExportService::class)->exportBookings($records, 'xlsx');
+                    }),
+                Tables\Actions\BulkAction::make('exportBulkCsv')
+                    ->label('Export Terpilih (CSV)')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                        $records->loadMissing(['service', 'doctor']);
+                        return app(ExportService::class)->exportBookings($records, 'csv');
                     }),
             ]);
     }

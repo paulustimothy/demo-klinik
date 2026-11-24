@@ -25,7 +25,7 @@ class ServiceResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Daftar Layanan';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     public static function canDelete(Model $record): bool
     {

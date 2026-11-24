@@ -28,7 +28,7 @@ export function Booking() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { bookingData, updateBooking, bookingResult, setBookingResult, resetBooking } = useBooking();
-  const { clinic, services, doctors } = useClinic();
+  const { clinic, services, doctors, loading } = useClinic();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [slots, setSlots] = useState([]);
@@ -43,6 +43,36 @@ export function Booking() {
     setCurrentStep(step);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Otomatis scroll ke paling atas saat Reservasi Berhasil Dibuat
+  useEffect(() => {
+    if (bookingResult) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [bookingResult]);
+
+  // Sinkronisasi: hapus pilihan layanan atau dokter jika tidak lagi ada dalam daftar aktif
+  useEffect(() => {
+    if (!loading) {
+      if (bookingData.serviceId && services.length > 0) {
+        const exists = services.some(s => String(s.id) === String(bookingData.serviceId) || s.slug === bookingData.serviceId);
+        if (!exists) {
+          updateBooking({ serviceId: null });
+        }
+      } else if (bookingData.serviceId && services.length === 0) {
+        updateBooking({ serviceId: null });
+      }
+
+      if (bookingData.doctorId && doctors.length > 0) {
+        const exists = doctors.some(d => String(d.id) === String(bookingData.doctorId));
+        if (!exists) {
+          updateBooking({ doctorId: null, date: null, time: null });
+        }
+      } else if (bookingData.doctorId && doctors.length === 0) {
+        updateBooking({ doctorId: null, date: null, time: null });
+      }
+    }
+  }, [loading, services, doctors, bookingData.serviceId, bookingData.doctorId]);
 
   // 1. Tangani preselection dari URL query params (?service=... atau ?doctor=...)
   useEffect(() => {
@@ -132,6 +162,7 @@ export function Booking() {
 
       const result = await api.submitBooking(payload);
       setBookingResult(result);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error(err);
       if (err.status === 409) {
@@ -307,54 +338,79 @@ export function Booking() {
               <h2 className="text-lg sm:text-xl font-bold text-clinic-ink tracking-tight">
                 1. Pilih Layanan Gigi
               </h2>
-              <span className="text-xs text-clinic-muted">Pilih salah satu layanan</span>
+              <span className="text-xs text-clinic-muted">
+                {services.length > 0 ? 'Pilih salah satu layanan' : 'Tidak ada layanan'}
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {services.map((service) => {
-                const isSelected = String(bookingData.serviceId) === String(service.id) || bookingData.serviceId === service.slug;
+            {services.length === 0 ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 text-center sm:text-left sm:flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-amber-600 shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-amber-950">Belum Ada Layanan Aktif</h3>
+                    <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
+                      Layanan reservasi online sedang disiapkan. Silakan konsultasi langsung via WhatsApp klinik.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  href={`https://wa.me/${clinic.whatsapp}?text=${encodeURIComponent('Halo ' + clinic.name + ', saya ingin bertanya mengenai layanan yang tersedia.')}`}
+                  variant="whatsapp"
+                  size="sm"
+                  icon={MessageCircle}
+                  className="mt-3 sm:mt-0 whitespace-nowrap text-xs shrink-0"
+                >
+                  Chat WhatsApp
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {services.map((service) => {
+                  const isSelected = String(bookingData.serviceId) === String(service.id) || bookingData.serviceId === service.slug;
 
-                return (
-                  <button
-                    key={service.id}
-                    type="button"
-                    onClick={() => updateBooking({ serviceId: service.id })}
-                    className={`group text-left rounded-card overflow-hidden border-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                      isSelected
-                        ? 'border-brand-500 ring-2 ring-brand-200 bg-brand-50/30 shadow-md'
-                        : 'border-clinic-border bg-white hover:border-brand-300 shadow-soft'
-                    }`}
-                  >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-clinic-surface relative">
-                      <img
-                        src={service.image}
-                        alt={service.alt}
-                        width={service.width}
-                        height={service.height}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      {isSelected && (
-                        <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center shadow-md">
-                          <Check className="w-4 h-4 stroke-[3]" />
+                  return (
+                    <button
+                      key={service.id}
+                      type="button"
+                      onClick={() => updateBooking({ serviceId: service.id })}
+                      className={`group text-left rounded-card overflow-hidden border-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                        isSelected
+                          ? 'border-brand-500 ring-2 ring-brand-200 bg-brand-50/30 shadow-md'
+                          : 'border-clinic-border bg-white hover:border-brand-300 shadow-soft'
+                      }`}
+                    >
+                      <div className="aspect-[4/3] w-full overflow-hidden bg-clinic-surface relative">
+                        <img
+                          src={service.image}
+                          alt={service.alt}
+                          width={service.width}
+                          height={service.height}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {isSelected && (
+                          <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center shadow-md">
+                            <Check className="w-4 h-4 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3.5 space-y-1">
+                        <div className="font-bold text-sm sm:text-base text-clinic-ink">
+                          {service.name}
                         </div>
-                      )}
-                    </div>
-                    <div className="p-3.5 space-y-1">
-                      <div className="font-bold text-sm sm:text-base text-clinic-ink">
-                        {service.name}
+                        <div className="text-xs font-semibold text-brand-700">
+                          {service.priceFormatted}
+                        </div>
+                        <div className="text-[11px] text-clinic-muted flex items-center gap-1 pt-0.5">
+                          <Clock className="w-3 h-3 text-clinic-muted" />
+                          <span>{service.duration}</span>
+                        </div>
                       </div>
-                      <div className="text-xs font-semibold text-brand-700">
-                        {service.priceFormatted}
-                      </div>
-                      <div className="text-[11px] text-clinic-muted flex items-center gap-1 pt-0.5">
-                        <Clock className="w-3 h-3 text-clinic-muted" />
-                        <span>{service.duration}</span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           {/* Sub-step B: Pilih Dokter */}
@@ -363,67 +419,103 @@ export function Booking() {
               <h2 className="text-lg sm:text-xl font-bold text-clinic-ink tracking-tight">
                 2. Pilih Dokter Gigi
               </h2>
-              <span className="text-xs text-clinic-muted">Tersedia {doctors.length} dokter</span>
+              <span className="text-xs text-clinic-muted">
+                {doctors.length > 0 ? `Tersedia ${doctors.length} dokter` : 'Tidak ada dokter aktif'}
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {doctors.map((doctor) => {
-                const isSelected = String(bookingData.doctorId) === String(doctor.id);
+            {doctors.length === 0 ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5 text-center sm:text-left sm:flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-amber-600 shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-amber-950">Tidak Ada Dokter Aktif Saat Ini</h3>
+                    <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
+                      Semua dokter sedang tidak aktif atau jadwal praktek online sedang diatur oleh admin.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  href={`https://wa.me/${clinic.whatsapp}?text=${encodeURIComponent('Halo ' + clinic.name + ', saya ingin bertanya jadwal dokter praktek.')}`}
+                  variant="whatsapp"
+                  size="sm"
+                  icon={MessageCircle}
+                  className="mt-3 sm:mt-0 whitespace-nowrap text-xs shrink-0"
+                >
+                  Chat WhatsApp
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {doctors.map((doctor) => {
+                  const isSelected = String(bookingData.doctorId) === String(doctor.id);
 
-                return (
-                  <button
-                    key={doctor.id}
-                    type="button"
-                    onClick={() => updateBooking({ doctorId: doctor.id })}
-                    className={`group text-left p-3.5 rounded-card border-2 transition-all duration-150 flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                      isSelected
-                        ? 'border-brand-500 ring-2 ring-brand-200 bg-brand-50/40 shadow-md'
-                        : 'border-clinic-border bg-white hover:border-brand-300 shadow-soft'
-                    }`}
-                  >
-                    <div className="w-14 h-18 sm:w-16 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-clinic-surface relative border border-clinic-border">
-                      <img
-                        src={doctor.image}
-                        alt={doctor.alt}
-                        width={doctor.width}
-                        height={doctor.height}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-0.5">
-                      <div className="font-bold text-sm text-clinic-ink truncate group-hover:text-brand-600 transition-colors">
-                        {doctor.name}
+                  return (
+                    <button
+                      key={doctor.id}
+                      type="button"
+                      onClick={() => updateBooking({ doctorId: doctor.id })}
+                      className={`group text-left p-3.5 rounded-card border-2 transition-all duration-150 flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                        isSelected
+                          ? 'border-brand-500 ring-2 ring-brand-200 bg-brand-50/40 shadow-md'
+                          : 'border-clinic-border bg-white hover:border-brand-300 shadow-soft'
+                      }`}
+                    >
+                      <div className="w-14 h-18 sm:w-16 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-clinic-surface relative border border-clinic-border">
+                        <img
+                          src={doctor.image}
+                          alt={doctor.alt}
+                          width={doctor.width}
+                          height={doctor.height}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <div className="text-xs text-clinic-muted">
-                        Pengalaman {doctor.experience}
+                      <div className="flex-1 min-w-0 space-y-0.5">
+                        <div className="font-bold text-sm text-clinic-ink truncate group-hover:text-brand-600 transition-colors">
+                          {doctor.name}
+                        </div>
+                        <div className="text-xs text-clinic-muted">
+                          Pengalaman {doctor.experience}
+                        </div>
+                        <div className="text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200/60 inline-block truncate max-w-full">
+                          {doctor.practiceDaysText}
+                        </div>
                       </div>
-                      <div className="text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200/60 inline-block truncate max-w-full">
-                        {doctor.practiceDaysText}
-                      </div>
-                    </div>
-                    {isSelected && (
-                      <div className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           {/* Navigation */}
-          <div className="pt-4 flex justify-end">
-            <Button
-              variant="primary"
-              size="lg"
-              disabled={!bookingData.serviceId || !bookingData.doctorId}
-              onClick={() => goToStep(2)}
-              icon={ArrowRight}
-              className="w-full sm:w-auto"
-            >
-              Lanjut ke Tanggal & Jam
-            </Button>
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            {(!bookingData.serviceId || !bookingData.doctorId) && (
+              <span className="text-xs text-clinic-muted">
+                {doctors.length === 0
+                  ? 'Dokter tidak tersedia untuk reservasi saat ini.'
+                  : services.length === 0
+                  ? 'Layanan tidak tersedia untuk reservasi saat ini.'
+                  : 'Silakan pilih 1 layanan dan 1 dokter untuk melanjutkan.'}
+              </span>
+            )}
+            <div className="sm:ml-auto w-full sm:w-auto">
+              <Button
+                variant="primary"
+                size="lg"
+                disabled={!bookingData.serviceId || !bookingData.doctorId}
+                onClick={() => goToStep(2)}
+                icon={ArrowRight}
+                className="w-full sm:w-auto"
+              >
+                Lanjut ke Tanggal & Jam
+              </Button>
+            </div>
           </div>
 
         </div>
