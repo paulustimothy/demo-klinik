@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,10 +18,12 @@ class Booking extends Model
         'code',
         'service_id',
         'doctor_id',
+        'patient_id',
         'date',
         'start_time',
         'patient_name',
         'patient_whatsapp',
+        'source',
         'notes',
         'status',
         'slot_key',
@@ -30,6 +33,7 @@ class Booking extends Model
 
     protected $casts = [
         'status' => BookingStatus::class,
+        'source' => BookingSource::class,
         'date' => 'date:Y-m-d',
         'expires_at' => 'datetime',
         'verified_at' => 'datetime',
@@ -43,6 +47,24 @@ class Booking extends Model
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(Doctor::class);
+    }
+
+    public function patient(): BelongsTo
+    {
+        return $this->belongsTo(Patient::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Booking $booking) {
+            if (!$booking->patient_id && !empty($booking->patient_name) && !empty($booking->patient_whatsapp)) {
+                $patient = Patient::firstOrCreate([
+                    'name' => trim($booking->patient_name),
+                    'whatsapp' => (string) $booking->patient_whatsapp,
+                ]);
+                $booking->patient_id = $patient->id;
+            }
+        });
     }
 
     /**

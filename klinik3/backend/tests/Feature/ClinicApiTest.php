@@ -61,6 +61,13 @@ class ClinicApiTest extends TestCase
                     'sort_order',
                 ],
             ]);
+
+        $data = $response->json();
+        $this->assertNotEmpty($data);
+        foreach ($data as $item) {
+            $this->assertNotNull($item['image_path']);
+            $this->assertMatchesRegularExpression('/^https?:\/\//', $item['image_path']);
+        }
     }
 
     public function test_get_doctors_returns_active_doctors_with_schedules(): void
@@ -81,6 +88,13 @@ class ClinicApiTest extends TestCase
                     'schedules',
                 ],
             ]);
+
+        $data = $response->json();
+        $this->assertNotEmpty($data);
+        foreach ($data as $item) {
+            $this->assertNotNull($item['photo_path']);
+            $this->assertMatchesRegularExpression('/^https?:\/\//', $item['photo_path']);
+        }
     }
 }
 

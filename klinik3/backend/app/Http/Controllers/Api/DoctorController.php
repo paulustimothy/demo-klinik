@@ -36,7 +36,7 @@ class DoctorController extends Controller
                     'name' => $doctor->name,
                     'title' => $doctor->title,
                     'years_experience' => $doctor->years_experience,
-                    'photo_path' => $doctor->photo_path,
+                    'photo_path' => $doctor->photo_url ?: $doctor->photo_path,
                     'practice_days' => $practiceDays,
                     'practice_days_text' => $practiceDaysText,
                     'schedules' => $doctor->schedules->map(fn($schedule) => [

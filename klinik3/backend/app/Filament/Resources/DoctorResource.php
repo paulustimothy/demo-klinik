@@ -27,9 +27,19 @@ class DoctorResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
     public static function canDelete(Model $record): bool
     {
-        return $record->bookings()->count() === 0;
+        return (auth()->user()?->isAdmin() ?? false) && $record->bookings()->count() === 0;
     }
 
     public static function form(Form $form): Form
@@ -50,10 +60,13 @@ class DoctorResource extends Resource
                     ->numeric()
                     ->suffix('tahun')
                     ->required(),
-                Forms\Components\TextInput::make('photo_path')
-                    ->label('Path Foto')
-                    ->placeholder('/images/doctor-rina.webp')
-                    ->maxLength(255),
+                Forms\Components\FileUpload::make('photo_path')
+                    ->label('Foto Dokter')
+                    ->image()
+                    ->disk('public')
+                    ->directory('doctors')
+                    ->maxSize(2048)
+                    ->imageCropAspectRatio('3:4'),
                 Forms\Components\Toggle::make('is_active')
                     ->label('Status Aktif')
                     ->default(true)
@@ -65,6 +78,11 @@ class DoctorResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('photo_path')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->circular()
+                    ->defaultImageUrl(fn (Doctor $record): ?string => $record->photo_url),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama Dokter')
                     ->searchable()

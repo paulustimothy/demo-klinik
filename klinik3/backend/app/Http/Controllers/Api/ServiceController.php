@@ -13,16 +13,19 @@ class ServiceController extends Controller
         $services = Service::where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get([
-                'id',
-                'name',
-                'slug',
-                'description',
-                'duration_minutes',
-                'starting_price',
-                'image_path',
-                'sort_order',
-            ]);
+            ->get()
+            ->map(function ($service) {
+                return [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'slug' => $service->slug,
+                    'description' => $service->description,
+                    'duration_minutes' => $service->duration_minutes,
+                    'starting_price' => $service->starting_price,
+                    'image_path' => $service->image_url ?: $service->image_path,
+                    'sort_order' => $service->sort_order,
+                ];
+            });
 
         return response()->json($services);
     }

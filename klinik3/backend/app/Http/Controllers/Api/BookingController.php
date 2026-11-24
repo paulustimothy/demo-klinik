@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
@@ -74,6 +75,7 @@ class BookingController extends Controller
                     'start_time' => $validated['time'],
                     'patient_name' => $validated['name'],
                     'patient_whatsapp' => $normalizedPhone,
+                    'source' => BookingSource::WEBSITE,
                     'notes' => $validated['notes'] ?? null,
                     'status' => BookingStatus::PENDING,
                     'slot_key' => $slotKey,

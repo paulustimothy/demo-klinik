@@ -173,5 +173,30 @@ class FilamentAdminTest extends TestCase
         $cancelledUrl = $chatAction->record($booking)->getUrl();
         $this->assertStringContainsString('booking+telah+dibatalkan', $cancelledUrl);
     }
+
+    public function test_table_actions_are_grouped_in_action_group(): void
+    {
+        $admin = User::where('email', env('ADMIN_EMAIL', 'admin@kliniksenyumsehat.com'))->first();
+        $component = \Livewire\Livewire::actingAs($admin)
+            ->test(\App\Filament\Resources\BookingResource\Pages\ListBookings::class);
+
+        $table = $component->instance()->getTable();
+        $this->assertNotNull($table->getAction('verify'));
+        $this->assertNotNull($table->getAction('chat'));
+        $this->assertNotNull($table->getAction('edit'));
+        $this->assertNotNull($table->getAction('complete'));
+        $this->assertNotNull($table->getAction('cancel'));
+        $this->assertNotNull($table->getAction('no_show'));
+    }
+
+    public function test_export_service_uses_app_temp_directory(): void
+    {
+        $exportService = app(\App\Services\ExportService::class);
+        $bookings = \App\Models\Booking::with(['service', 'doctor'])->get();
+
+        $response = $exportService->exportBookings($bookings, 'csv');
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertDirectoryExists(storage_path('app/temp'));
+    }
 }
 

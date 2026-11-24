@@ -23,6 +23,27 @@ class Doctor extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $appends = [
+        'photo_url',
+    ];
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->photo_path, 'http://') || str_starts_with($this->photo_path, 'https://')) {
+            return $this->photo_path;
+        }
+
+        if (str_starts_with($this->photo_path, '/images/') || str_starts_with($this->photo_path, 'images/')) {
+            return url(ltrim($this->photo_path, '/'));
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path);
+    }
+
     public function schedules(): HasMany
     {
         return $this->hasMany(DoctorSchedule::class);

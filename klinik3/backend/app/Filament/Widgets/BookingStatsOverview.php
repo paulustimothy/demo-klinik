@@ -12,6 +12,8 @@ class BookingStatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
+    protected static ?string $pollingInterval = '30s';
+
     protected function getStats(): array
     {
         $today = Carbon::today()->toDateString();

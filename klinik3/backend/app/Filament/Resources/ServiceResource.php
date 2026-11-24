@@ -27,9 +27,19 @@ class ServiceResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->isAdmin() ?? false;
+    }
+
     public static function canDelete(Model $record): bool
     {
-        return $record->bookings()->count() === 0;
+        return (auth()->user()?->isAdmin() ?? false) && $record->bookings()->count() === 0;
     }
 
     public static function form(Form $form): Form
@@ -65,10 +75,13 @@ class ServiceResource extends Resource
                     ->numeric()
                     ->prefix('Rp')
                     ->required(),
-                Forms\Components\TextInput::make('image_path')
-                    ->label('Path Foto')
-                    ->placeholder('/images/service-scaling.webp')
-                    ->maxLength(255),
+                Forms\Components\FileUpload::make('image_path')
+                    ->label('Foto / Ilustrasi Layanan')
+                    ->image()
+                    ->disk('public')
+                    ->directory('services')
+                    ->maxSize(2048)
+                    ->imageCropAspectRatio('4:3'),
                 Forms\Components\TextInput::make('sort_order')
                     ->label('Urutan')
                     ->numeric()
@@ -89,6 +102,11 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Urutan')
                     ->sortable(),
+                Tables\Columns\ImageColumn::make('image_path')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->square()
+                    ->defaultImageUrl(fn (Service $record): ?string => $record->image_url),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama Layanan')
                     ->searchable()

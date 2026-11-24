@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BookingSource;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\Doctor;
@@ -42,6 +43,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time1,
             'patient_name' => 'Siti Nurhaliza',
             'patient_whatsapp' => '6281234567801',
+            'source' => BookingSource::WEBSITE,
             'notes' => 'Pembersihan karang gigi rutin',
             'status' => BookingStatus::PENDING,
             'slot_key' => Booking::generateSlotKey($docRina->id, $date1, $time1),
@@ -60,6 +62,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time2,
             'patient_name' => 'Ahmad Fauzi',
             'patient_whatsapp' => '6281234567802',
+            'source' => BookingSource::WHATSAPP,
             'notes' => 'Gigi geraham belakang ngilu saat makan',
             'status' => BookingStatus::PENDING,
             'slot_key' => Booking::generateSlotKey($docBudi->id, $date2, $time2),
@@ -78,6 +81,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time3,
             'patient_name' => 'Dewi Lestari',
             'patient_whatsapp' => '6281234567803',
+            'source' => BookingSource::WHATSAPP,
             'notes' => 'Sudah konfirmasi via WhatsApp',
             'status' => BookingStatus::VERIFIED,
             'slot_key' => Booking::generateSlotKey($docRina->id, $date3, $time3),
@@ -96,6 +100,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time4,
             'patient_name' => 'Bambang Sudarmono',
             'patient_whatsapp' => '6281234567804',
+            'source' => BookingSource::PHONE,
             'notes' => 'Konsultasi cabut gigi geraham bungsu',
             'status' => BookingStatus::VERIFIED,
             'slot_key' => Booking::generateSlotKey($docMaya->id, $date4, $time4),
@@ -114,6 +119,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time5,
             'patient_name' => 'Rina Wijaya',
             'patient_whatsapp' => '6281234567805',
+            'source' => BookingSource::WALK_IN,
             'notes' => 'Penambalan selesai rapi',
             'status' => BookingStatus::COMPLETED,
             'slot_key' => null,
@@ -132,6 +138,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time6,
             'patient_name' => 'Eko Prasetyo',
             'patient_whatsapp' => '6281234567806',
+            'source' => BookingSource::WEBSITE,
             'notes' => null,
             'status' => BookingStatus::COMPLETED,
             'slot_key' => null,
@@ -150,6 +157,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time7,
             'patient_name' => 'Indah Permata',
             'patient_whatsapp' => '6281234567807',
+            'source' => BookingSource::WHATSAPP,
             'notes' => 'Pasien berhalangan hadir',
             'status' => BookingStatus::CANCELLED,
             'slot_key' => null,
@@ -168,6 +176,7 @@ class BookingSeeder extends Seeder
             'start_time' => $time8,
             'patient_name' => 'Gunawan Wibowo',
             'patient_whatsapp' => '6281234567808',
+            'source' => BookingSource::PHONE,
             'notes' => null,
             'status' => BookingStatus::EXPIRED,
             'slot_key' => null,

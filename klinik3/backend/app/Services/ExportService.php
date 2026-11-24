@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BookingSource;
 use App\Models\Booking;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -12,6 +13,18 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ExportService
 {
+    /**
+     * Dapatkan path direktori temporary lokal pada storage/app/temp
+     */
+    protected function getTempDirectory(): string
+    {
+        $dir = storage_path('app/temp');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        return $dir;
+    }
+
     /**
      * Export data reservasi ke file Excel (.xlsx) atau CSV (.csv)
      *
@@ -24,7 +37,7 @@ class ExportService
         $format = strtolower($format) === 'csv' ? 'csv' : 'xlsx';
         $timestamp = date('Ymd_His');
         $filename = "reservasi_klinik_{$timestamp}.{$format}";
-        $tempPath = tempnam(sys_get_temp_dir(), 'export_bk_') . ".{$format}";
+        $tempPath = tempnam($this->getTempDirectory(), 'export_bk_') . ".{$format}";
 
         $writer = $format === 'csv' ? new CsvWriter() : new XlsxWriter();
         $writer->openToFile($tempPath);
@@ -35,6 +48,7 @@ class ExportService
             'Kode Booking',
             'Nama Pasien',
             'WhatsApp',
+            'Sumber',
             'Layanan',
             'Dokter',
             'Tanggal',
@@ -51,6 +65,13 @@ class ExportService
             $date = $record->date ? Carbon::parse($record->date)->format('Y-m-d') : '-';
             $time = $record->start_time ? substr($record->start_time, 0, 5) . ' WIB' : '-';
             $status = method_exists($record->status, 'label') ? $record->status->label() : (string) $record->status;
+            $source = $record->source instanceof BookingSource ? $record->source->label() : match ($record->source) {
+                'website' => 'Website',
+                'whatsapp' => 'WhatsApp',
+                'phone' => 'Telepon',
+                'walk_in' => 'Walk-in',
+                default => $record->source ? ucfirst((string) $record->source) : 'Website',
+            };
             $createdAt = $record->created_at ? Carbon::parse($record->created_at)->format('Y-m-d H:i:s') : '-';
 
             $writer->addRow(Row::fromValues([
@@ -58,6 +79,7 @@ class ExportService
                 $record->code,
                 $record->patient_name,
                 (string) $record->patient_whatsapp,
+                $source,
                 $serviceName,
                 $doctorName,
                 $date,
@@ -127,7 +149,7 @@ class ExportService
         $format = strtolower($format) === 'csv' ? 'csv' : 'xlsx';
         $timestamp = date('Ymd_His');
         $filename = "laporan_bulanan_{$monthName}_{$year}_{$timestamp}.{$format}";
-        $tempPath = tempnam(sys_get_temp_dir(), 'export_rep_') . ".{$format}";
+        $tempPath = tempnam($this->getTempDirectory(), 'export_rep_') . ".{$format}";
 
         $writer = $format === 'csv' ? new CsvWriter() : new XlsxWriter();
         $writer->openToFile($tempPath);
